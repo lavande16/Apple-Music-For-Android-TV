@@ -11,6 +11,15 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 class ExploreCategoryRecoveryTest {
+    private var previousLanguage = com.applemusicktv.i18n.LanguageChoice.System
+    @org.junit.Before fun useChineseFixtureLanguage() {
+        previousLanguage = com.applemusicktv.i18n.AppLanguage.choice
+        com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese)
+    }
+    @org.junit.After fun restoreFixtureLanguage() {
+        com.applemusicktv.i18n.AppLanguage.select(previousLanguage)
+    }
+
     private val calls=mutableListOf<Request>()
     private fun fixture(name:String)=javaClass.getResource("/v9/$name.json")!!.readText()
     private var editorialWorks=false

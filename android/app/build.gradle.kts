@@ -68,6 +68,7 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
         unitTests.all {
+            it.systemProperty("amtv.test.artifacts", project.layout.buildDirectory.dir("test-artifacts").get().asFile.absolutePath)
             System.getenv("ROBOLECTRIC_DEPENDENCY_DIR")?.let { dir ->
                 it.systemProperty("robolectric.offline", "true")
                 it.systemProperty("robolectric.dependency.dir", dir)

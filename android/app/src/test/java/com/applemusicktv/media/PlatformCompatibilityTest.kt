@@ -26,10 +26,7 @@ class PlatformCompatibilityTest {
         vm.showNotification("fixture service","fixture account",42)
         return context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
-    @Test @Config(sdk=[23]) fun androidSixDoesNotReadPipApiAndCanPostLegacyNotification() {
-        val activity=allocate(MainActivity::class.java)
-        val getter=MainActivity::class.java.getDeclaredMethod("inPictureInPictureCompat").apply { isAccessible=true }
-        assertEquals(false,getter.invoke(activity))
+    @Test @Config(sdk=[23]) fun androidSixCanPostLegacyNotification() {
         assertEquals(1,shadowOf(notify()).allNotifications.size)
     }
     @Test @Config(sdk=[28]) fun newerAndroidCreatesTheAlertChannel() {

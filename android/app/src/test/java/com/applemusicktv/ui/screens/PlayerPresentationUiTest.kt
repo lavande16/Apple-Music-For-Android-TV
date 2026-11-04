@@ -39,6 +39,8 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @OptIn(ExperimentalTestApi::class)
 class PlayerPresentationUiTest {
+    @org.junit.Before fun selectChineseForFixtures() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
+
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
     private fun image(): Bitmap {
         lateinit var result:Bitmap
@@ -51,7 +53,7 @@ class PlayerPresentationUiTest {
     }
     private fun save(name:String):Bitmap {
         val result=image()
-        val root=generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }.first { File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile }
+        val root=com.applemusicktv.testing.TestArtifacts.root
         val out=File(root,"artifacts/v3.0-v16-release/preview/$name.png");out.parentFile.mkdirs()
         out.outputStream().use { result.compress(Bitmap.CompressFormat.PNG,100,it) }
         return result
@@ -104,7 +106,7 @@ class PlayerPresentationUiTest {
             val scope = rememberCoroutineScope()
             val notice = remember { com.applemusicktv.ui.viewmodel.LyricsFailureNotice(scope) }
             val phase by notice.phase.collectAsState()
-            LaunchedEffect(song) { notice.beginSong(); notice.report(1,0); notice.showWhenReady() }
+            LaunchedEffect(song) { notice.beginSong(song); notice.report(1,0); notice.finishEmpty(); notice.showWhenReady() }
             Box(Modifier.fillMaxSize().background(Color.Black)) {
                 EmptyLyrics(song,.85f,phase == com.applemusicktv.ui.viewmodel.LyricsNoticePhase.Visible)
             }
@@ -162,7 +164,7 @@ class PlayerPresentationUiTest {
         }
     }
 
-    @Test fun focusedStepperHasTranslucentRedInsteadOfGray() {
+    @Test fun focusedStepperUsesSolidAccentInsteadOfGray() {
         compose.setContent { Column(Modifier.width(500.dp).background(Color.White)) { Stepper("交叉渐变","2 秒","衔接",{},{}) } }
         compose.onNodeWithText("+").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
         compose.mainClock.advanceTimeBy(400)
@@ -170,8 +172,8 @@ class PlayerPresentationUiTest {
         val bounds=compose.onNodeWithText("+").fetchSemanticsNode().boundsInRoot
         // Sample inside the round button, away from its clipped corner and glyph.
         val color=bmp.getPixel(bounds.center.x.toInt(),bounds.top.toInt()+4)
-        assertTrue("Focus background must be translucent red: $color",android.graphics.Color.red(color)>android.graphics.Color.green(color)+15)
-        assertTrue(android.graphics.Color.green(color)>140)
+        assertTrue("Focus background must use the accent: $color",android.graphics.Color.red(color)>android.graphics.Color.green(color)+15)
+        assertTrue(android.graphics.Color.green(color)<100)
     }
 
 

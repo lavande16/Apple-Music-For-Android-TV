@@ -40,6 +40,8 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @OptIn(ExperimentalTvMaterial3Api::class, ExperimentalTestApi::class)
 class V20FocusTest {
+    @org.junit.Before fun selectChineseForFixtures() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
+
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
     private fun bitmap(name:String): Bitmap {
         lateinit var result:Bitmap
@@ -47,8 +49,7 @@ class V20FocusTest {
             val view=compose.activity.window.decorView
             result=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888)
             view.draw(Canvas(result))
-            val root=generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
-                .first { File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile }
+            val root=com.applemusicktv.testing.TestArtifacts.root
             File(root,"artifacts/v3.0-v21-release/preview").apply {mkdirs()}
                 .resolve("$name.png").outputStream().use {result.compress(Bitmap.CompressFormat.PNG,100,it)}
         }
@@ -80,7 +81,12 @@ class V20FocusTest {
 
     @Test fun loginLinkIsTouchOnlyAndUsesBrowserIntentWhileButtonKeepsOriginalFill() {
         val url="http://192.0.2.15:8080/"
-        compose.setContent {OnboardingContent(OnboardingState(phoneUrl=url),onStart={})}
+        compose.setContent {
+            val mode = LocalInputModeManager.current
+            SideEffect { mode.requestInputMode(InputMode.Keyboard) }
+            OnboardingContent(OnboardingState(phoneUrl=url),onStart={})
+        }
+        compose.runOnIdle { compose.activity.window.decorView.dispatchWindowFocusChanged(true) }
         compose.mainClock.advanceTimeBy(600)
         val image=bitmap("login-focused-button-and-link")
         assertTrue(count(image,0xFFFA233B.toInt())>1000)

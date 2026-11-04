@@ -41,11 +41,12 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @OptIn(ExperimentalTestApi::class)
 class PlayerPolishUiTest {
+    @org.junit.Before fun selectChineseForFixtures() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
+
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
     private val ready=FontDownloadState(1,1,FontDownloadPhase.Ready)
     private val indeterminate=SemanticsMatcher.expectValue(SemanticsProperties.ProgressBarRangeInfo,ProgressBarRangeInfo.Indeterminate)
-    private val output: File get() = File(generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
-        .first { File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile },"artifacts/v3.0-v21-release/preview").apply { mkdirs() }
+    private val output: File get() = File(com.applemusicktv.testing.TestArtifacts.root,"artifacts/v3.0-v21-release/preview").apply { mkdirs() }
     private fun save(name:String) = compose.runOnIdle {
         val view=compose.activity.window.decorView
         val image=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888)
@@ -196,7 +197,10 @@ class PlayerPolishUiTest {
         compose.onNodeWithContentDescription("暂停").assertIsDisplayed()
         compose.runOnIdle { visible=false }
         compose.mainClock.advanceTimeBy(500)
-        for(label in listOf("上一首","暂停","下一首")) compose.onNodeWithContentDescription(label).assertDoesNotExist()
+        for(label in listOf("上一首","暂停","下一首")) {
+            val bounds = compose.onNodeWithContentDescription(label).fetchSemanticsNode().boundsInRoot
+            compose.runOnIdle { com.applemusicktv.testing.assertBlackRegion(compose.activity.window.decorView, bounds) }
+        }
         compose.onNodeWithText(song.title).assertIsDisplayed()
         save("fullscreen-no-lyrics-idle")
         compose.runOnIdle { visible=true }

@@ -44,7 +44,10 @@ class AppLanguageTest {
         assertEquals("en",AppLanguage.changes.value)
     }
     @Test fun bothResourceSetsHaveEveryMessageAndMatchingFormatArguments() {
-        assertEquals(329,MessageCatalog.messages.size)
+        val declaredMessages = R.string::class.java.fields
+            .filter { it.name.startsWith("msg_") }.map { it.getInt(null) }.toSet()
+        assertTrue("Localized message catalog must not be empty", declaredMessages.isNotEmpty())
+        assertTrue("Every numbered message must have both translations", MessageCatalog.messages.keys.containsAll(declaredMessages))
         for ((id,pair) in MessageCatalog.messages) {
             val zh=AppLanguage.textFor("zh",id)
             val en=AppLanguage.textFor("en",id)

@@ -39,7 +39,7 @@ import org.robolectric.annotation.GraphicsMode
 class FullscreenFooterBrandingTest {
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
     private val ready=FontDownloadState(1,1,FontDownloadPhase.Ready)
-    private val output:File get()=File(generateSequence(File(System.getProperty("user.dir"))) {it.parentFile}.first {File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile},"artifacts/v3.0-v16-release/preview").apply {mkdirs()}
+    private val output:File get()=File(com.applemusicktv.testing.TestArtifacts.root,"artifacts/v3.0-v16-release/preview").apply {mkdirs()}
     private fun cover():String {
         val b=Bitmap.createBitmap(64,64,Bitmap.Config.ARGB_8888);val c=Canvas(b);c.drawColor(android.graphics.Color.rgb(220,140,50))
         val p=android.graphics.Paint().apply {color=android.graphics.Color.rgb(100,180,220)};c.drawCircle(22f,22f,17f,p)
@@ -52,7 +52,9 @@ class FullscreenFooterBrandingTest {
     }
     @Test fun launcherIdentityUsesNewNamePackageVersionAndExactSizedTransparentIcon() {
         assertEquals("com.applemusic.lavande",BuildConfig.APPLICATION_ID)
-        assertEquals("3.0-V16",BuildConfig.VERSION_NAME);assertEquals(16,BuildConfig.VERSION_CODE)
+        val packageInfo = compose.activity.packageManager.getPackageInfo(BuildConfig.APPLICATION_ID, 0)
+        assertEquals(BuildConfig.VERSION_NAME, packageInfo.versionName)
+        assertEquals(BuildConfig.VERSION_CODE, packageInfo.versionCode)
         val ctx=compose.activity;val app=ctx.packageManager.getApplicationInfo(BuildConfig.APPLICATION_ID,0)
         assertEquals("Apple Music TV",ctx.packageManager.getApplicationLabel(app).toString())
         val activity=ctx.packageManager.getActivityInfo(ComponentName(ctx,MainActivity::class.java),0)

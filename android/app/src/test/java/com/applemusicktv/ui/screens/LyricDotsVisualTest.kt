@@ -49,7 +49,7 @@ class LyricDotsVisualTest {
                     assertTrue("dot center must stay visible at $ms", center > 0)
                     assertEquals("circle corner must stay clear at $ms", 0, corner)
                 }
-                File("/private/tmp/amtv-v65-dots-$ms.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                File(com.applemusicktv.testing.TestArtifacts.root,"amtv-v65-dots-$ms.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
             }
         }
     }

@@ -47,6 +47,8 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @OptIn(ExperimentalTvMaterial3Api::class, ExperimentalTestApi::class)
 class V21PolishTest {
+    @org.junit.Before fun selectChineseForFixtures() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
+
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
     private fun bitmap(name:String): Bitmap {
         lateinit var image:Bitmap
@@ -54,9 +56,8 @@ class V21PolishTest {
             val view=compose.activity.window.decorView
             image=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888)
             view.draw(Canvas(image))
-            val root=generateSequence(File(System.getProperty("user.dir"))) {it.parentFile}
-                .first {File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile}
-            File(root,"artifacts/v3.0-v21-release/preview/$name.png").outputStream().use {
+            val root=com.applemusicktv.testing.TestArtifacts.root
+            File(root,"artifacts/v3.0-v21-release/preview/$name.png").apply { parentFile.mkdirs() }.outputStream().use {
                 image.compress(Bitmap.CompressFormat.PNG,100,it)
             }
         }
@@ -68,7 +69,12 @@ class V21PolishTest {
     @Test fun delayedLoginFocusDoesNotResizeButtonAndDarkLinkRemainsTouchOnly() {
         compose.mainClock.autoAdvance=false
         val url="http://192.0.2.15:8080/"
-        compose.setContent {OnboardingContent(OnboardingState(phoneUrl=url),{})}
+        compose.setContent {
+            val mode = LocalInputModeManager.current
+            SideEffect { mode.requestInputMode(InputMode.Keyboard) }
+            OnboardingContent(OnboardingState(phoneUrl=url),{})
+        }
+        compose.runOnIdle { compose.activity.window.decorView.dispatchWindowFocusChanged(true) }
         compose.mainClock.advanceTimeBy(16)
         val before=bitmap("login-before-focus")
         compose.mainClock.advanceTimeBy(700)

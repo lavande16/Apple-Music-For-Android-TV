@@ -44,8 +44,7 @@ import org.robolectric.shadows.ShadowDialog
 class NavigationPolishUiTest {
     @Before fun selectChineseForLegacyLabels() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
-    private val output: File get() = File(generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
-        .first { File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile },"artifacts/v3.0-v45-release/preview").apply { mkdirs() }
+    private val output: File get() = File(com.applemusicktv.testing.TestArtifacts.root,"artifacts/v3.0-v45-release/preview").apply { mkdirs() }
     private fun save(name:String,dialog:Boolean=false)=compose.runOnIdle {
         val view=if(dialog) ShadowDialog.getLatestDialog().window!!.decorView else compose.activity.window.decorView
         val bitmap=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888)

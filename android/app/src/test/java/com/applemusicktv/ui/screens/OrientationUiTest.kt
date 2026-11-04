@@ -42,6 +42,8 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk=[28],application=Application::class,qualifiers="w960dp-h960dp-mdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class OrientationUiTest {
+    @org.junit.Before fun selectChineseForFixtures() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
+
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
     private val ready=FontDownloadState(1,1,FontDownloadPhase.Ready)
     private fun song()=Song("orientation-fixture","测试歌曲标题","测试艺人","专辑",180000,null,null,null)
@@ -55,6 +57,8 @@ class OrientationUiTest {
             progressMs=5000,isPlaying=false,isLoading=false,fluidQuality=FluidQuality.OFF,
             lyrics=listOf(LyricLine(0, 10000, "第一行歌词"),LyricLine(10000,20000,"第二行歌词")),lyricsScale=.85f))
         field("_state",state);field("state",state)
+        field("artworkCentered", MutableStateFlow(false))
+        field("albumWallPrefetch", kotlinx.coroutines.CompletableDeferred(emptyList<com.applemusicktv.ui.wall.CachedWallCard>()))
         val player=Proxy.newProxyInstance(ExoPlayer::class.java.classLoader,arrayOf(ExoPlayer::class.java)) { _,m,_ ->
             if (m.name !in listOf("equals", "hashCode", "toString")) playerCalls+=m.name
             when(m.returnType) {
@@ -72,7 +76,7 @@ class OrientationUiTest {
         val view=compose.activity.window.decorView
         val image=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888);view.draw(Canvas(image))
         val cropped=Bitmap.createBitmap(image,0,0,minOf(width,image.width),minOf(height,image.height))
-        val root=generateSequence(File(System.getProperty("user.dir"))) {it.parentFile}.first {File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile}
+        val root=com.applemusicktv.testing.TestArtifacts.root
         val out=File(root,"artifacts/v3.0-v16-release/preview").apply {mkdirs()}
         File(out,"$name.png").outputStream().use {cropped.compress(Bitmap.CompressFormat.PNG,100,it)}
     }
@@ -101,17 +105,17 @@ class OrientationUiTest {
                 Box(Modifier.requiredSize(if(portrait) 540.dp else 960.dp,if(portrait) 960.dp else 540.dp)) {NowPlayingScreen(vm,nav)}
             }
         }
-        compose.onNodeWithContentDescription("全屏歌词").assertIsDisplayed()
+        compose.onNodeWithContentDescription("歌词选项").assertIsDisplayed()
         save("landscape-original-split",960,540)
         compose.runOnIdle {portrait=true}
-        compose.onNodeWithContentDescription("全屏歌词").assertDoesNotExist()
+        compose.onNodeWithContentDescription("歌词选项").assertDoesNotExist()
         compose.onNodeWithText("测试歌曲标题").assertIsDisplayed()
         compose.onNodeWithText("第一行歌词").assertIsDisplayed()
         save("portrait-forced-fullscreen-lyrics",540,960)
         nav.toggleQueuePanel() // Portrait remains lyrics-only even if the queue shortcut is invoked.
         compose.onNodeWithText("第一行歌词").assertIsDisplayed()
         compose.runOnIdle {portrait=false}
-        compose.onNodeWithContentDescription("全屏歌词").assertIsDisplayed()
+        compose.onNodeWithContentDescription("歌词选项").assertIsDisplayed()
         assertEquals(5000L,state.value.progressMs);assertEquals(listOf(song()),state.value.queue)
         assertTrue("Layout rotation must not call player transport/source APIs: $playerCalls",playerCalls.isEmpty())
         assertTrue(vm.nowPlayingVisible)
@@ -124,12 +128,13 @@ class OrientationUiTest {
                 Box(Modifier.requiredSize(if(portrait) 540.dp else 960.dp,if(portrait) 960.dp else 540.dp)) {NowPlayingScreen(vm,nav)}
             }
         }
-        compose.onNodeWithContentDescription("全屏歌词").performClick()
-        compose.onNodeWithContentDescription("全屏歌词").assertDoesNotExist()
+        compose.onNodeWithContentDescription("歌词选项").performClick()
+        compose.onNodeWithText("全屏歌词").performClick()
+        compose.onNodeWithContentDescription("歌词选项").assertDoesNotExist()
         compose.runOnIdle {portrait=true}
         compose.onNodeWithText("第一行歌词").assertIsDisplayed()
         compose.runOnIdle {portrait=false}
-        compose.onNodeWithContentDescription("全屏歌词").assertDoesNotExist()
+        compose.onNodeWithContentDescription("歌词选项").assertDoesNotExist()
         compose.onNodeWithText("测试歌曲标题").assertIsDisplayed()
         assertTrue(playerCalls.isEmpty())
     }
@@ -140,15 +145,15 @@ class OrientationUiTest {
                 Box(Modifier.requiredSize(600.dp,height.dp)) {NowPlayingScreen(vm,nav)}
             }
         }
-        compose.onNodeWithContentDescription("全屏歌词").assertIsDisplayed()
+        compose.onNodeWithContentDescription("歌词选项").assertIsDisplayed()
         for (h in listOf(601,660,720,721,900)) {
             compose.runOnIdle {height=h}
-            compose.onNodeWithContentDescription("全屏歌词").assertDoesNotExist()
+            compose.onNodeWithContentDescription("歌词选项").assertDoesNotExist()
             compose.onNodeWithText("第一行歌词").assertIsDisplayed()
             if(h==660) save("portrait-near-square-full-lyrics",600,h)
         }
         compose.runOnIdle {height=540}
-        compose.onNodeWithContentDescription("全屏歌词").assertIsDisplayed()
+        compose.onNodeWithContentDescription("歌词选项").assertIsDisplayed()
         assertEquals(5000L,state.value.progressMs)
         assertTrue(playerCalls.isEmpty())
     }
@@ -173,7 +178,8 @@ class OrientationUiTest {
         compose.onNodeWithContentDescription("播放").performClick();assertEquals(1,taps)
         compose.onNodeWithContentDescription("暂停").assertIsDisplayed()
         compose.runOnIdle {chrome=false}
-        compose.onNodeWithContentDescription("暂停").assertDoesNotExist()
+        compose.mainClock.advanceTimeBy(500)
+        compose.runOnIdle { com.applemusicktv.testing.assertBlackRegion(compose.activity.window.decorView, play) }
         compose.onNodeWithText(longSong.title).assertIsDisplayed()
         save("portrait-360-idle",360,780)
     }

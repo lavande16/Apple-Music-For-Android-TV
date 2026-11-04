@@ -30,19 +30,22 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @OptIn(ExperimentalTestApi::class)
 class CacheSettingsUiTest {
+    @org.junit.Before fun selectChineseForFixtures() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
+
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
     private fun save(name:String, dialog:Boolean=false)=compose.runOnIdle {
         val view=if(dialog) org.robolectric.shadows.ShadowDialog.getLatestDialog().window!!.decorView else compose.activity.window.decorView
         val bitmap=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888)
         view.draw(Canvas(bitmap))
-        val output=File(generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
-            .first { File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").exists() },"artifacts/v3.0-v24-release/preview")
+        val output=File(com.applemusicktv.testing.TestArtifacts.root,"artifacts/v3.0-v24-release/preview")
         output.mkdirs()
         File(output,"$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG,100,it) }
     }
     @Test fun wholeGigabyteButtonsClampAndProgressUpdatesOnlyAfterConfirmedClear() {
         var gb by mutableStateOf(1);var used by mutableStateOf(750_000_000L);var message by mutableStateOf("")
         compose.setContent {
+            val mode = androidx.compose.ui.platform.LocalInputModeManager.current
+            SideEffect { mode.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
             Box(Modifier.fillMaxSize().background(Color.White).padding(40.dp)) {
                 Column(Modifier.width(800.dp)) {
                     CacheSettingsSection(gb,used,false,message,{gb=it},{used=0;message="清理完成"})
@@ -61,6 +64,8 @@ class CacheSettingsUiTest {
         repeat(9) { compose.onNodeWithText("−").performClick() }
         assertEquals(1,gb)
         compose.onNodeWithText("一键清理").performClick()
+        compose.runOnIdle { org.robolectric.shadows.ShadowDialog.getLatestDialog().window!!.decorView.dispatchWindowFocusChanged(true) }
+        compose.waitForIdle()
         assertEquals(750_000_000L,used)
         compose.onNodeWithText("清理缓存？").assertIsDisplayed()
         compose.onNodeWithText("取消").assertIsFocused()
@@ -94,20 +99,28 @@ class CacheSettingsUiTest {
     @Test fun cancelAndBackDismissWithoutClearingWhileRemoteConfirmClearsOnce() {
         var clears = 0
         compose.setContent {
+            val mode = androidx.compose.ui.platform.LocalInputModeManager.current
+            SideEffect { mode.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
             Column(Modifier.width(800.dp)) {
                 CacheSettingsSection(1,750_000_000L,false,"",{},{clears++})
             }
         }
         compose.onNodeWithText("一键清理").performClick()
+        compose.runOnIdle { org.robolectric.shadows.ShadowDialog.getLatestDialog().window!!.decorView.dispatchWindowFocusChanged(true) }
+        compose.waitForIdle()
         compose.onNodeWithText("取消").assertIsFocused()
         compose.onNodeWithText("取消").performKeyInput { pressKey(Key.DirectionCenter) }
         compose.onNodeWithText("清理缓存？").assertDoesNotExist()
         assertEquals(0, clears)
         compose.onNodeWithText("一键清理").performClick()
+        compose.runOnIdle { org.robolectric.shadows.ShadowDialog.getLatestDialog().window!!.decorView.dispatchWindowFocusChanged(true) }
+        compose.waitForIdle()
         compose.runOnIdle { org.robolectric.shadows.ShadowDialog.getLatestDialog().onBackPressed() }
         compose.onNodeWithText("清理缓存？").assertDoesNotExist()
         assertEquals(0, clears)
         compose.onNodeWithText("一键清理").performClick()
+        compose.runOnIdle { org.robolectric.shadows.ShadowDialog.getLatestDialog().window!!.decorView.dispatchWindowFocusChanged(true) }
+        compose.waitForIdle()
         compose.onNodeWithText("取消").performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("清理").assertIsFocused()
         compose.onNodeWithText("清理").performKeyInput { pressKey(Key.DirectionCenter) }

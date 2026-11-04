@@ -82,7 +82,7 @@ class TabFocusBorderTest {
         compose.runOnIdle {
             val view=compose.activity.window.decorView
             bitmap=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888);view.draw(Canvas(bitmap))
-            val root=generateSequence(File(System.getProperty("user.dir"))) {it.parentFile}.first {File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile}
+            val root=com.applemusicktv.testing.TestArtifacts.root
             val out=File(root,"artifacts/v3.0-v16-release/preview").apply {mkdirs()}
             File(out,"$name.png").outputStream().use {bitmap.compress(Bitmap.CompressFormat.PNG,100,it)}
         }

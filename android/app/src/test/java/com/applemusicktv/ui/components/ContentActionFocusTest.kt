@@ -42,7 +42,7 @@ class ContentActionFocusTest {
             val view=compose.activity.window.decorView
             bmp=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888)
             view.draw(Canvas(bmp))
-            val root=generateSequence(File(System.getProperty("user.dir"))) {it.parentFile}.first {File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").exists()}
+            val root=com.applemusicktv.testing.TestArtifacts.root
             val out=File(root,"artifacts/v3.0-v16-release/preview").apply {mkdirs()}
             File(out,"$name.png").outputStream().use {bmp.compress(Bitmap.CompressFormat.PNG,100,it)}
         }

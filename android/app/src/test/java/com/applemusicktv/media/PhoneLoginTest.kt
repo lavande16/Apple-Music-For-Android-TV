@@ -56,8 +56,7 @@ class PhoneLoginTest {
         assertTrue(saved.contains("请回到电视端，点击“开始聆听”继续操作"))
         assertFalse(error.contains("<strong>令牌已保存</strong>"))
         assertTrue(error.contains("令牌未保存"))
-        val root = generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
-            .first { File(it, "CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile }
+        val root = com.applemusicktv.testing.TestArtifacts.root
         val out = File(root, "artifacts/v3.0-v16-release/preview").apply { mkdirs() }
         File(out, "phone.html").writeText(initial)
         File(out, "phone-saved.html").writeText(saved)
@@ -81,7 +80,7 @@ class PhoneLoginTest {
         val server = server()
         val handle = InAppWebServer::class.java.getDeclaredMethod("handle", java.net.Socket::class.java).apply { isAccessible = true }
         fun request(method: String, path: String, body: String = ""): String {
-            val input = "$method $path HTTP/1.1\r\nContent-Length: ${body.toByteArray().size}\r\n\r\n$body".byteInputStream()
+            val input = "$method $path HTTP/1.1\r\nAccept-Language: zh-CN\r\nContent-Length: ${body.toByteArray().size}\r\n\r\n$body".byteInputStream()
             val output = java.io.ByteArrayOutputStream()
             val socket = object : java.net.Socket() {
                 override fun getInputStream() = input

@@ -56,8 +56,7 @@ class V29PhoneLocalizationTest {
         assertTrue(saved.contains("请回到电视端，点击“开始聆听”继续操作"))
         assertFalse(error.contains("<strong>令牌已保存</strong>"))
         assertTrue(error.contains("令牌未保存"))
-        val root = generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
-            .first { File(it, "CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile }
+        val root = com.applemusicktv.testing.TestArtifacts.root
         val out = File(root, "artifacts/v3.0-v32-release/preview").apply { mkdirs() }
         File(out, "phone.html").writeText(initial)
         File(out, "phone-saved.html").writeText(saved)
@@ -126,8 +125,7 @@ class V29PhoneLocalizationTest {
         assertTrue(js.contains("Close"))
         assertTrue(js.contains("media-user-token"))
         assertTrue(html.contains(com.applemusicktv.i18n.PhonePage.bookmarkHtml(context,"en")))
-        val root=generateSequence(File(System.getProperty("user.dir"))) {it.parentFile}
-            .first {File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile}
+        val root=com.applemusicktv.testing.TestArtifacts.root
         File(root,"artifacts/v3.0-v32-release/preview").mkdirs()
         File(root,"artifacts/v3.0-v32-release/preview/phone-en.html").writeText(html)
         File(root,"artifacts/v3.0-v32-release/preview/bookmark-en.js").writeText(js)

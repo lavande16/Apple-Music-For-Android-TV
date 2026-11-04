@@ -45,7 +45,7 @@ class LargeScreenGateTest {
         compose.onNodeWithText("Main app").assertDoesNotExist(); assertFalse(access); assertEquals(0,mainEntries)
         compose.runOnIdle {
             val v=compose.activity.window.decorView;val b=Bitmap.createBitmap(v.width,v.height,Bitmap.Config.ARGB_8888);v.draw(Canvas(b))
-            val root=generateSequence(File(System.getProperty("user.dir"))) {it.parentFile}.first {File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").exists()}
+            val root=com.applemusicktv.testing.TestArtifacts.root
             val out=File(root,"artifacts/v3.0-v16-release/preview").apply {mkdirs()}
             File(out,"unsupported-window.png").outputStream().use {b.compress(Bitmap.CompressFormat.PNG,100,it)}
         }

@@ -19,6 +19,15 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class FontFileStoreTest {
+    private var previousLanguage = com.applemusicktv.i18n.LanguageChoice.System
+    @org.junit.Before fun useChineseFixtureLanguage() {
+        previousLanguage = com.applemusicktv.i18n.AppLanguage.choice
+        com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese)
+    }
+    @org.junit.After fun restoreFixtureLanguage() {
+        com.applemusicktv.i18n.AppLanguage.select(previousLanguage)
+    }
+
     @get:Rule val temporary = TemporaryFolder()
     private val bytes = "complete font bytes".toByteArray()
     private fun asset(name: String = "font.otf", data: ByteArray = bytes) = FontAsset(name, data.size.toLong(),

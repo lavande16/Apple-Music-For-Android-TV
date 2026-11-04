@@ -93,9 +93,8 @@ class V24LayoutTest {
         val view=compose.activity.window.decorView
         val bitmap=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888)
         view.draw(Canvas(bitmap))
-        val root=generateSequence(File(System.getProperty("user.dir"))) {it.parentFile}
-            .first {File(it,"CURRENT_APPLE_MUSIC_TV_BASELINE.md").isFile}
-        File(root,"artifacts/v3.0-v25-release/preview/$name.png").outputStream().use {
+        val root=com.applemusicktv.testing.TestArtifacts.root
+        File(root,"artifacts/v3.0-v25-release/preview/$name.png").apply { parentFile.mkdirs() }.outputStream().use {
             bitmap.compress(Bitmap.CompressFormat.PNG,100,it)
         }
     }

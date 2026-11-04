@@ -21,6 +21,15 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk=[28], application=Application::class)
 class FontGatedLyricsTest {
+    private var previousLanguage = com.applemusicktv.i18n.LanguageChoice.System
+    @org.junit.Before fun useChineseFixtureLanguage() {
+        previousLanguage = com.applemusicktv.i18n.AppLanguage.choice
+        com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese)
+    }
+    @org.junit.After fun restoreFixtureLanguage() {
+        com.applemusicktv.i18n.AppLanguage.select(previousLanguage)
+    }
+
     @get:Rule val compose = createComposeRule()
 
     @Test fun bothLayoutsHideLyricsUntilEveryFontIsReadyAndShowFailureVerbatim() {
