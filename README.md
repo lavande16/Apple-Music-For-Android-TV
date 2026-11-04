@@ -5,7 +5,7 @@
 
 [中文](#中文) · [English](#english) · [官网 / Website](https://applemusictv.pages.dev/) · [上游项目 / Upstream](https://github.com/JObersi10/apple-music-tv)
 
-![Apple Music TV 在客厅大屏上的聆听体验 / Apple Music TV on a living-room screen](images/project/living-room.avif)
+![Apple Music TV 在客厅大屏上的聆听体验 / Apple Music TV on a living-room screen](images/project/cover.avif)
 
 ## 中文
 
