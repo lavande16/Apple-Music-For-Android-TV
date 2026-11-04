@@ -1,0 +1,66 @@
+# Third-Party Notices
+
+Apple Music TV is licensed under **GPL-3.0** (see [LICENSE](LICENSE)). It uses the
+third-party projects listed below. Each retains its own license; those licenses
+apply to those components, not to the rest of this project.
+
+## Adapted code
+
+- **gamdl** — MIT — https://github.com/glomatico/gamdl
+  The server-side Apple Music CENC decryption workflow (Widevine license
+  acquisition via Apple's `acquireWebPlaybackLicense` endpoint, PSSH
+  reconstruction, and `mp4decrypt` handoff) was adapted from gamdl. See
+  `server/get_key.py`, `server/stream_decrypt.py`, and `server/ref_key.py`;
+  those scripts also import gamdl's `WVD` device at runtime. The on-device Kotlin
+  port (`AppleMusicDrmCallback`, `AppleDirectClient`) follows the same license
+  approach using Android's native MediaDrm.
+
+## Runtime dependencies
+
+- **pywidevine** — GPL-3.0 — https://github.com/devine-dl/pywidevine
+  Widevine CDM used by the Python decryption scripts to obtain content keys. Its
+  copyleft license is the reason this project is distributed under GPL-3.0.
+- **Bento4 / mp4decrypt** — GPL-2.0 or commercial — https://github.com/axiomatic-systems/Bento4
+  External binary invoked to remove CENC encryption from decrypted audio.
+- **FFmpeg** — LGPL-2.1+/GPL — https://ffmpeg.org
+  External binary used to remux/transcode audio on the server, and via the Media3
+  FFmpeg decoder extension on-device.
+- **AndroidX, Jetpack Compose, Media3 (ExoPlayer)** — Apache-2.0 — https://developer.android.com/jetpack
+  UI toolkit (Compose for TV) and media playback stack for the Android/Fire TV app.
+- **Hilt / Dagger** — Apache-2.0 — https://dagger.dev/hilt
+  Dependency injection for the Android app.
+- **OkHttp, Retrofit, Moshi** — Apache-2.0 — https://square.github.io/okhttp
+  HTTP client, REST layer, and JSON parsing for the Android app.
+- **Coil** — Apache-2.0 — https://coil-kt.github.io/coil
+  Image loading for artwork on the Android app.
+- **Hono** — MIT — https://hono.dev
+  Web framework for the optional PC proxy server.
+- **@syncfm/applemusic-api** — MIT — https://github.com/syncfm/applemusic-api
+  Apple Music web-API client used by the proxy server for search and catalog calls.
+- **axios** — MIT — https://github.com/axios/axios
+  HTTP client used by the proxy server.
+- **httpx** — BSD-3-Clause — https://www.python-httpx.org
+  HTTP client used by the Python decryption scripts.
+
+## Data sources
+
+- **Apple Music** — https://music.apple.com
+  Provides all catalog content, artwork, editorial data, and primary lyrics. This
+  project is not affiliated with or endorsed by Apple. You must bring your own
+  Apple Music subscription; streams are decrypted locally for personal playback only.
+- **LRCLIB** — https://lrclib.net
+  Community lyrics database used as the line-synced lyrics fallback when Apple has
+  no timed lyrics for a track.
+
+## Source snapshot note / 源码快照说明
+
+The V76 source archive contains prebuilt `android/app/libs/media3-ffmpeg.jar` and
+`android/app/src/main/jniLibs/armeabi-v7a/libffmpegJNI.so`. The exact FFmpeg source
+revision, configuration, patches and build instructions for these binaries have
+not yet been identified. The Media3 extension version is described in the app
+build file as 1.4.1; this is not sufficient to establish the corresponding FFmpeg
+source. Until these details are recovered, this snapshot must not be represented
+as a complete, reproducible source release for those binaries.
+
+V76 归档包含上述预编译文件；其对应 FFmpeg 的精确源码版本、配置、补丁和
+构建方法尚未确认。因此目前不能将此快照描述为这些二进制文件的完整可复现源码。
