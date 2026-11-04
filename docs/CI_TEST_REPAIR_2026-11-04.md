@@ -24,7 +24,8 @@ After fixing early export errors, additional stale expectations became reachable
 - Application runtime files, the public V76 APK and its signing remain unchanged.
 - No tests are excluded, disabled, or configured to ignore failures.
 - Local full suite after repair: **582 tests, 0 failures, 0 errors, 0 skipped**.
-- English-host full suite: **582 tests, 0 failures, 0 errors, 0 skipped**. Linux GitHub Actions is verified separately after pushing the same repair.
+- English-host full suite: **582 tests, 0 failures, 0 errors, 0 skipped**.
+- GitHub Actions Linux full suite: **582 tests, 0 failures, 0 errors, 0 skipped**, confirmed from the uploaded JUnit XML. [Successful run 41842022186](https://github.com/lavande16/Apple-Music-For-Android-TV/actions/runs/41842022186), repair commit `be90004b77c7fcf4bdd11b7d7873d85b82f1761c`.
 - CI exports JUnit XML and HTML reports even when tests fail, retaining them for seven days.
 
 These are host-test results. They do not replace device playback, remote-control, or user acceptance testing. The published V76 APK is not rebuilt as part of this repair.
