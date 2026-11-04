@@ -11,14 +11,15 @@
 
 **好音乐，无边界。** 无需 Apple TV，让喜欢的旋律在家里的 Android 大屏上响起。
 
-Apple Music For Android TV 是一个为大屏聆听打造的非官方项目，基于 [JObersi10/apple-music-tv](https://github.com/JObersi10/apple-music-tv) 修改与完善。它针对电视重新设计界面布局和遥控器交互，将熟悉的音乐世界带入客厅。
+Apple Music For Android TV 是一款面向 Android 电视与大屏设备的非官方音乐应用。围绕客厅聆听场景，重新设计界面布局与遥控器交互，让浏览曲库、挑选歌单和欣赏歌词，都成为轻松自然的大屏体验。
 
 ### 为聆听而设计
 
-- **大屏体验**：为电视与遥控器设计，也适配 Pad、折叠屏等 Android 大屏设备。
-- **熟悉的音乐世界**：从个人曲库、专属推荐到歌单、电台和编辑精选，在更大的屏幕上探索喜欢的音乐。
-- **流动光影**：从专辑封面中提取色彩，让背景随音乐柔和流动，搭配歌词与封面，营造沉浸式聆听氛围。
-- **自在选择**：支持浅色与深色界面，并可从播放页进入封面墙。
+- **遥控自如**：为电视与遥控器设计浏览和播放界面，坐在沙发上，也能轻松找到想听的音乐。
+- **音乐随行**：从个人曲库、专属推荐到歌单、电台与编辑精选，将熟悉的音乐世界带入客厅。
+- **流动光影**：从专辑封面中提取色彩，让光影柔和交融，搭配封面与歌词，营造沉浸式聆听氛围。
+- **随心呈现**：选择浅色或深色界面，或从播放页进入封面墙，让音乐拥有不同的视觉表达。
+- **不止电视**：也适配 Pad、折叠屏等 Android 大屏设备，从独处聆听到客厅分享，都能自在享受。
 
 ![大屏播放界面 / Now playing on the big screen](images/project/now-playing.webp)
 
@@ -43,14 +44,15 @@ cd android
 
 **Great music belongs on every screen.** Bring your favourite music into the living room on your Android TV—no Apple TV required.
 
-Apple Music For Android TV is an independent, unofficial project built on [JObersi10/apple-music-tv](https://github.com/JObersi10/apple-music-tv). Its interface and remote controls are designed for the big screen.
+Apple Music For Android TV is an unofficial music app for Android TVs and large-screen devices. Its interface and remote controls are designed around living-room listening, making it easy to browse your library, choose a playlist, and follow the lyrics from the sofa.
 
 ### Designed for listening
 
-- **Made for the big screen:** browse with a TV remote, and enjoy the experience on Android tablets and foldables too.
-- **Your music, together:** explore your library, recommendations, playlists, radio, and editorial selections.
-- **Colours in motion:** artwork-inspired colours flow behind the cover and lyrics to create an immersive listening atmosphere.
-- **Make it yours:** choose light or dark appearance and open the cover wall from the player.
+- **Relax and browse:** navigate your music and playback controls with a TV remote.
+- **Your music, together:** bring your library, recommendations, playlists, radio, and editorial selections into the living room.
+- **Colours in motion:** colours drawn from album artwork blend into a flowing background, bringing the cover and lyrics together in an immersive listening experience.
+- **Make it yours:** choose light or dark appearance, or open the cover wall from the player for a different view of your music.
+- **Beyond the TV:** enjoy the experience on Android tablets and foldables too, whether listening alone or sharing music at home.
 
 ![电视上的艺人页面 / Artist page on a TV](images/project/tv.webp)
 
