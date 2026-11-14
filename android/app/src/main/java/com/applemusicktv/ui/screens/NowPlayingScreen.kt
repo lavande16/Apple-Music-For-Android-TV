@@ -183,6 +183,14 @@ fun NowPlayingScreen(
     var chromeVisible by remember { mutableStateOf(true) }
     var lastInteractionMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var showSongDestinations by remember(song?.id) { mutableStateOf(false) }
+    var songMenuOpeningMode by remember { mutableStateOf<androidx.compose.ui.input.InputMode?>(null) }
+    val songMenuInput = Modifier.onPreviewKeyEvent { event ->
+        if (event.type == KeyEventType.KeyDown && event.key in setOf(Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.Menu))
+            songMenuOpeningMode = androidx.compose.ui.input.InputMode.Keyboard
+        false
+    }.pointerInput(Unit) {
+        awaitEachGesture { awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial); songMenuOpeningMode = androidx.compose.ui.input.InputMode.Touch }
+    }
     var showLyricsMenu by remember { mutableStateOf(false) }
     var lyricsHidden by rememberSaveable { mutableStateOf(false) }
     // A portrait viewport overrides presentation without changing the user's normal choice.
@@ -416,9 +424,10 @@ fun NowPlayingScreen(
                     footerVisible = !wallSelection,
                     playFocusRequester = fullPlayFocus,
                     onSongInfoClick = { if (state.stationLaunch == null) showSongDestinations = !showSongDestinations },
+                    songInfoInput = songMenuInput,
                     songInfoMenu = {
                         SongDestinationsPopup(visible = showSongDestinations && state.stationLaunch == null,
-                            song = song, playerVm = playerVm, onDismiss = { showSongDestinations = false },
+                            song = song, playerVm = playerVm, openingMode = songMenuOpeningMode, onDismiss = { showSongDestinations = false },
                             onArtistClick = { showSongDestinations = false; onArtistClick(it) },
                             onAlbumClick = { showSongDestinations = false; onAlbumClick(it) })
                     },
@@ -482,7 +491,7 @@ fun NowPlayingScreen(
                                 SongInfoFocusSurface(
                                     onClick = { if (state.stationLaunch == null) showSongDestinations = !showSongDestinations },
                                     chromeAlpha = chromeAlpha,
-                                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = tr(R.string.msg_281, song.title, song.artistName) },
+                                    modifier = songMenuInput.fillMaxWidth().semantics { contentDescription = tr(R.string.msg_281, song.title, song.artistName) },
                                 ) {
                                     FadeThrough(song, Modifier.fillMaxWidth(), contentKey = { it.id }) { song ->
                                         Column(Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -496,7 +505,7 @@ fun NowPlayingScreen(
                                 }
                                 SongDestinationsPopup(
                                     visible = showSongDestinations && state.stationLaunch == null,
-                                    song = song, playerVm = playerVm,
+                                    song = song, playerVm = playerVm, openingMode = songMenuOpeningMode,
                                     onDismiss = { showSongDestinations = false },
                                     onArtistClick = { showSongDestinations = false; onArtistClick(it) },
                                     onAlbumClick = { showSongDestinations = false; onAlbumClick(it) },
@@ -594,6 +603,7 @@ private fun SongDestinationsPopup(
     visible: Boolean,
     song: com.applemusicktv.data.model.Song,
     playerVm: PlayerViewModel,
+    openingMode: androidx.compose.ui.input.InputMode?,
     onDismiss: () -> Unit,
     onArtistClick: (String) -> Unit,
     onAlbumClick: (String) -> Unit,
@@ -604,6 +614,8 @@ private fun SongDestinationsPopup(
     var ids by remember(song.id) { mutableStateOf(song.artistId to song.albumId) }
     var resolving by remember(song.id) { mutableStateOf(false) }
     val firstFocus = remember { FocusRequester() }
+    var remoteSelection by remember(song.id) { mutableIntStateOf(if (ids.first != null) 0 else 1) }
+    LaunchedEffect(ids) { if (ids.first != null) remoteSelection = 0 else if (ids.second != null) remoteSelection = 1 }
     LaunchedEffect(song.id) {
         if (ids.first == null || ids.second == null) {
             resolving = true
@@ -612,11 +624,11 @@ private fun SongDestinationsPopup(
             resolving = false
         }
     }
-    PlayerBubbleMenu(visibility,onDismiss,initialFocus=firstFocus, focusAvailable=ids.first != null || ids.second != null) {
+    PlayerBubbleMenu(visibility,onDismiss,initialFocus=firstFocus, focusAvailable=ids.first != null || ids.second != null, openingMode=openingMode) {
         if(resolving) Text(tr(R.string.msg_282),color=Color(0xFF6E6E73),fontSize=12.sp,modifier=Modifier.padding(12.dp))
-        NpMenuItem(tr(R.string.msg_132),modifier=if (ids.first != null) Modifier.focusRequester(firstFocus) else Modifier,icon=Glyph.ARTIST,
+        NpMenuItem(tr(R.string.msg_132),modifier=(if (ids.first != null) Modifier.focusRequester(firstFocus) else Modifier).onFocusChanged { if (it.isFocused) remoteSelection = 0 },selectedByRemote=openingMode == androidx.compose.ui.input.InputMode.Keyboard && remoteSelection == 0 && ids.first != null,icon=Glyph.ARTIST,
             enabled=ids.first!=null) {ids.first?.let(onArtistClick)}
-        NpMenuItem(tr(R.string.msg_133),modifier=if (ids.first == null && ids.second != null) Modifier.focusRequester(firstFocus) else Modifier,icon=Glyph.ALBUM,enabled=ids.second!=null) {ids.second?.let(onAlbumClick)}
+        NpMenuItem(tr(R.string.msg_133),modifier=(if (ids.first == null && ids.second != null) Modifier.focusRequester(firstFocus) else Modifier).onFocusChanged { if (it.isFocused) remoteSelection = 1 },selectedByRemote=openingMode == androidx.compose.ui.input.InputMode.Keyboard && remoteSelection == 1 && ids.second != null,icon=Glyph.ALBUM,enabled=ids.second!=null) {ids.second?.let(onAlbumClick)}
     }
 }
 
@@ -748,6 +760,7 @@ internal fun FullScreenLyrics(
     footerVisible: Boolean = true,
     playFocusRequester: FocusRequester? = null,
     onSongInfoClick: () -> Unit = {},
+    songInfoInput: Modifier = Modifier,
     songInfoMenu: @Composable () -> Unit = {},
     hideArtwork: Boolean = false,
     onArtworkPosition: (androidx.compose.ui.geometry.Rect) -> Unit = {},
@@ -807,7 +820,7 @@ internal fun FullScreenLyrics(
                         .albumCoverFocus(coverFocusRequester, 10.dp, onArtworkClick).clip(RoundedCornerShape(10.dp)).testTag("fullscreenArtwork"),
                 )
                 Box(Modifier.weight(1f)) {
-                    SongInfoFocusSurface(chromeAlpha = ctlAlpha, onClick = onSongInfoClick, compact = true) {
+                    SongInfoFocusSurface(chromeAlpha = ctlAlpha, onClick = onSongInfoClick, modifier = songInfoInput, compact = true) {
                         Column {
                             Text(song.title, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                 style = TextStyle(fontFamily = LocalTextStyle.current.fontFamily, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Color.White))
@@ -845,7 +858,7 @@ internal fun FullScreenLyrics(
                 )
             }
             Box(Modifier.widthIn(max = landscapeTitleWidth)) {
-                SongInfoFocusSurface(chromeAlpha = ctlAlpha, onClick = onSongInfoClick, compact = true) {
+                SongInfoFocusSurface(chromeAlpha = ctlAlpha, onClick = onSongInfoClick, modifier = songInfoInput, compact = true) {
                     Column {
                         Text(song.title, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Clip, style = TextStyle(fontFamily = LocalTextStyle.current.fontFamily, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Color.White))
                         Text(song.artistName, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Clip, style = TextStyle(fontFamily = LocalTextStyle.current.fontFamily, fontSize = 14.sp, color = PlayerSecondaryColor))
@@ -2115,6 +2128,7 @@ internal fun NpMenuItem(
     icon: com.applemusicktv.ui.components.Glyph? = null,
     iconAlpha: Float = 1f,
     checked: Boolean = false,
+    selectedByRemote: Boolean = false,
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
@@ -2135,7 +2149,9 @@ internal fun NpMenuItem(
         tonalElevation = 0.dp,
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+            Modifier.fillMaxWidth()
+                .background(if (selectedByRemote) Color(0xFFECECEF) else Color.Transparent, RoundedCornerShape(8.dp))
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (icon != null) {

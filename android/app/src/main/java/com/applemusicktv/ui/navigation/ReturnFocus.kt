@@ -49,6 +49,7 @@ internal class NavigationReturnState(val nav: NavHostController) {
     val contentFocusHandoff get() = pending != null || pendingDetailFocus != null
     fun finishDetailFocus(id: String?) { if (pendingDetailFocus == id) pendingDetailFocus = null }
     var generation by mutableIntStateOf(0)
+    var tabReturnPending by mutableStateOf(false)
     var returnToTab by mutableStateOf<TopNavTab?>(null)
     var active: String? = null
     // Any explicit key/touch input cancels a delayed first-entry focus request.
@@ -56,11 +57,12 @@ internal class NavigationReturnState(val nav: NavHostController) {
         private set
     val restoring get() = pending != null
     fun request(id: String) { pending=id; generation++ }
-    fun cancel() { inputSerial++; pendingDetailFocus=null; if(pending != null || returnToTab != null) { pending=null; returnToTab=null; generation++ } }
+    fun cancel() { inputSerial++; tabReturnPending=false; pendingDetailFocus=null; if(pending != null || returnToTab != null) { pending=null; returnToTab=null; generation++ } }
     fun back() {
         pendingDetailFocus=null
         val previous=nav.previousBackStackEntry
         if (previous != null) {
+            tabReturnPending = previous.savedStateHandle.get<String>("return.tabFocus") != null
             request(previous.id)
             if (!nav.popBackStack()) cancel()
         } else {
@@ -109,13 +111,14 @@ internal fun rememberReturnTarget(enabled: Boolean = true): Pair<Modifier, () ->
 
 /** Dialog/Popup focus must never replace the control that opened it. */
 @Composable
-internal fun ReturnFocusLayer(content: @Composable () -> Unit) {
+internal fun ReturnFocusLayer(restoreOnDismiss: Boolean = true, content: @Composable () -> Unit) {
     val page=LocalReturnPage.current
     val coordinator=LocalNavigationReturn.current
     val origin=remember { page?.last }
+    val shouldRestore by rememberUpdatedState(restoreOnDismiss)
     DisposableEffect(page) {
         onDispose {
-            if (page != null && origin != null) {
+            if (shouldRestore && page != null && origin != null) {
                 page.last=origin
                 if (coordinator?.nav?.currentBackStackEntry?.id == page.entry.id) coordinator.request(page.entry.id)
             }
@@ -152,7 +155,10 @@ internal fun NavGraphBuilder.returningComposable(
             val tabOrigin=entry.savedStateHandle.remove<String>("return.tabFocus")
             if(tabOrigin != null) {
                 coordinator.pending=null
-                if(mode.inputMode != InputMode.Touch) coordinator.returnToTab=runCatching { TopNavTab.valueOf(tabOrigin) }.getOrNull()
+                if(mode.inputMode != InputMode.Touch) {
+                    coordinator.returnToTab=runCatching { TopNavTab.valueOf(tabOrigin) }.getOrNull()
+                    if (coordinator.returnToTab == null) coordinator.tabReturnPending = false
+                } else coordinator.tabReturnPending = false
                 return@LaunchedEffect
             }
             val address=page.last
@@ -202,6 +208,7 @@ internal fun NavGraphBuilder.returningComposable(
                 if(!restored && !touchReturn) coordinator.returnToTab=coordinator.owner(entry)
             }
         }
-        CompositionLocalProvider(LocalReturnPage provides page,LocalReturnPath provides emptyList()) { content(entry) }
+        CompositionLocalProvider(LocalReturnPage provides page, LocalReturnPath provides emptyList(),
+            LocalMotionInteractive provides (LocalMotionInteractive.current && !(coordinator.tabReturnPending && coordinator.nav.currentBackStackEntry?.id == entry.id))) { content(entry) }
     }
 }

@@ -89,4 +89,21 @@ class MenuInitialFocusTest {
         }
         compose.onNodeWithTag("first").assertIsNotFocused()
     }
+    @Test fun popupCanFocusBeforeWindowFocusCallback() {
+        compose.setContent {
+            val first = remember { FocusRequester() }
+            val mode = LocalInputModeManager.current
+            val window = remember { object : androidx.compose.ui.platform.WindowInfo {
+                override val isWindowFocused: Boolean get() = false
+            } }
+            SideEffect { mode.requestInputMode(InputMode.Keyboard) }
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalWindowInfo provides window,
+                LocalMenuOpeningInputMode provides InputMode.Keyboard) {
+                Column(Modifier.menuInitialFocus(first, waitForWindowFocus = false)) {
+                    androidx.compose.foundation.layout.Box(Modifier.size(60.dp).focusRequester(first).focusable().testTag("first"))
+                }
+            }
+        }
+        compose.onNodeWithTag("first").assertIsFocused()
+    }
 }

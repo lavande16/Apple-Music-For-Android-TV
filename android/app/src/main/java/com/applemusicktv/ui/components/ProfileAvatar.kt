@@ -34,7 +34,7 @@ fun AppleSymbol(modifier: Modifier = Modifier, color: Color = com.applemusicktv.
 @Composable
 fun ProfileAvatar(url: String?, modifier: Modifier = Modifier, onLoadError: () -> Unit = {}) {
     var failed by remember(url) { mutableStateOf(false) }
-    Box(modifier.size(44.dp).clip(CircleShape).background(Color.White)
+    Box(modifier.size(44.dp).clip(CircleShape).background(com.applemusicktv.ui.theme.AppPalette.adaptive(Color.White, Color(0xFF222225)))
         .border(0.5.dp, com.applemusicktv.ui.theme.AppPalette.adaptive(Color(0xFFD9D9DE), Color(0xFF48484D)), CircleShape), Alignment.Center) {
         AppleSymbol(Modifier.size(width = 23.dp, height = 30.dp))
         if (url != null && !failed) AsyncImage(model = url, contentDescription = null,

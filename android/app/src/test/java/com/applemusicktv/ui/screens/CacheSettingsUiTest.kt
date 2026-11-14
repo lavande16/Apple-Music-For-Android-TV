@@ -20,6 +20,8 @@ import java.io.File
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Before
+import org.junit.After
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -33,11 +35,21 @@ class CacheSettingsUiTest {
     @org.junit.Before fun selectChineseForFixtures() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
 
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
+    @Before fun chinese() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
+    @After fun resetLanguage() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.System) }
+    @Test fun focusRemainsOnButtonAtCapacityLimit() {
+        var gb by mutableStateOf(9)
+        compose.setContent { CacheSettingsSection(gb, 0, false, "", { gb = it }, {}) }
+        compose.onNodeWithText("+").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(10, gb)
+        compose.onNodeWithText("+").assertIsFocused().assertIsNotEnabled()
+    }
     private fun save(name:String, dialog:Boolean=false)=compose.runOnIdle {
         val view=if(dialog) org.robolectric.shadows.ShadowDialog.getLatestDialog().window!!.decorView else compose.activity.window.decorView
         val bitmap=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888)
         view.draw(Canvas(bitmap))
-        val output=File(com.applemusicktv.testing.TestArtifacts.root,"artifacts/v3.0-v24-release/preview")
+        val output=File(System.getProperty("java.io.tmpdir"), "amtv-v77-cache-test-preview")
         output.mkdirs()
         File(output,"$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG,100,it) }
     }

@@ -65,8 +65,8 @@ class V22PlayerUiTest {
         }.getOrDefault(decor) else decor
         val image=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888)
         view.draw(Canvas(image))
-        val root=com.applemusicktv.testing.TestArtifacts.root
-        File(root,"artifacts/v3.0-v22-release/preview/$name.png").apply { parentFile.mkdirs() }.outputStream().use {
+        val out = File(System.getProperty("java.io.tmpdir"), "amtv-v79-lyrics-test").apply { mkdirs() }
+        File(out,"$name.png").outputStream().use {
             image.compress(Bitmap.CompressFormat.PNG,100,it)
         }
     }
@@ -117,12 +117,16 @@ class V22PlayerUiTest {
         compose.onNodeWithContentDescription("歌词选项").performKeyInput {pressKey(Key.DirectionCenter)}
         compose.mainClock.advanceTimeBy(200)
         compose.waitForIdle()
+        // The menu content must exist without another directional key. The real
+        // television is needed to verify its separately composited pixels.
+        compose.onNodeWithText("隐藏歌词").assertIsDisplayed()
+        // Robolectric does not automatically dispatch native popup window focus.
         compose.runOnIdle {
             val type=Class.forName("android.view.WindowManagerGlobal")
             val instance=type.getDeclaredMethod("getInstance").invoke(null)
-            val field=type.getDeclaredField("mViews").apply {isAccessible=true}
+            val field=type.getDeclaredField("mViews").apply { isAccessible=true }
             @Suppress("UNCHECKED_CAST") val views=field.get(instance) as List<android.view.View>
-            views.last {it.javaClass.name.contains("PopupLayout")}.dispatchWindowFocusChanged(true)
+            views.last { it.javaClass.name.contains("PopupLayout") }.dispatchWindowFocusChanged(true)
         }
         compose.mainClock.advanceTimeBy(100)
         compose.onNodeWithText("隐藏歌词").assertIsDisplayed()

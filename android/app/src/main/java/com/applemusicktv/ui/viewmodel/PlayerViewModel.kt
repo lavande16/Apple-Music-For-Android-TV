@@ -347,6 +347,9 @@ class PlayerViewModel @Inject constructor(
     // instantly (from the N+1 prefetch) instead of blanking to empty and re-fetching — which, in
     // full-screen lyrics, flashed the view back to the player for a beat.
     private val lyricsCache = java.util.concurrent.ConcurrentHashMap<String, List<LyricLine>>()
+    // restoreState may start immediately from the initializer below.
+    private val lyricsInFlight = mutableMapOf<String, kotlinx.coroutines.Deferred<List<LyricLine>>>()
+    private var pendingRestore: RestoreInfo? = null
     private var motionJob: kotlinx.coroutines.Job? = null
     private var fadeJob: kotlinx.coroutines.Job? = null
     private var crossfadeInProgress = false
@@ -1320,7 +1323,15 @@ class PlayerViewModel @Inject constructor(
             webServer.addLog("PLR", "restoreState idx=$idx posMs=$posMs song=${song.title} — deferred (paused)")
             pendingRestore = RestoreInfo(song, posMs, full)
             // Lyrics/motion are just display — safe (and nice) to warm now.
-            if (full) loadLyrics(song.id)
+            if (full) {
+                val savedLines = runCatching {
+                    prefs.getString("saved_current_lyrics", null)?.let {
+                        moshi.adapter(SavedLyrics::class.java).fromJson(it).linesFor(song.id)
+                    }
+                }.getOrNull()
+                if (savedLines != null) lyricsCache[song.id] = savedLines
+                loadLyrics(song.id)
+            }
             loadMotion(song.id)
         } catch (_: Exception) {}
     }
@@ -1328,11 +1339,14 @@ class PlayerViewModel @Inject constructor(
     /** A restored track not yet loaded into the player — loaded on the first play press so nothing
      *  (incl. Android media resumption) can auto-start it. */
     private data class RestoreInfo(val song: Song, val posMs: Long, val full: Boolean)
-    private var pendingRestore: RestoreInfo? = null
 
     private fun startPendingRestore() {
         val r = pendingRestore ?: return
         pendingRestore = null
+        if (r.full && _state.value.currentSong?.id == r.song.id &&
+            _state.value.lyrics.isEmpty() && _state.value.exhaustedEmptyLyricsFor == r.song.id) {
+            loadLyrics(r.song.id)
+        }
         hasPlayedSomething = true
         val standalone = r.full && useStandalone()
         usingStandalone = standalone
@@ -1506,8 +1520,7 @@ class PlayerViewModel @Inject constructor(
         if (mode == NowPlayingBackground.PROJECTOR) "intensity_projector" else "intensity_dynamic"
 
     fun stepFluidQuality(dir: Int) {
-        val qualities = FluidQuality.entries
-        val next = qualities[(_state.value.fluidQuality.ordinal + dir).coerceIn(0, qualities.lastIndex)]
+        val next = _state.value.fluidQuality.step(dir)
         _state.update { it.copy(fluidQuality = next) }
         prefs.edit { putString("fluid_quality", next.name) }
     }
@@ -2469,8 +2482,6 @@ class PlayerViewModel @Inject constructor(
     // asked for again via loadLyrics when it becomes current. Without this, both fire a full network
     // fetch for the same id at once (seen as two concurrent getLyrics in logcat). Both paths now await
     // the same Deferred.
-    private val lyricsInFlight = mutableMapOf<String, kotlinx.coroutines.Deferred<List<LyricLine>>>()
-
     private fun fetchLyricsShared(id: String, title: String, artist: String, durationSec: Long): kotlinx.coroutines.Deferred<List<LyricLine>> {
         lyricsCache[id]?.let { return kotlinx.coroutines.CompletableDeferred(it) }
         lyricsInFlight[id]?.let { return it }
@@ -2501,7 +2512,10 @@ class PlayerViewModel @Inject constructor(
             exhaustedEmptyLyricsFor=null) }
         val generation = ++lyricsLoadGeneration
         lyricsCache[songId]?.let { cached ->
-            if (_state.value.currentSong?.id == songId) _state.update { it.copy(lyrics = cached) }
+            if (_state.value.currentSong?.id == songId) {
+                _state.update { it.copy(lyrics = cached) }
+                saveCurrentLyrics(songId, cached)
+            }
             return
         }
         val song = _state.value.currentSong?.takeIf { it.id == songId } ?: return
@@ -2522,7 +2536,10 @@ class PlayerViewModel @Inject constructor(
                     }
                 },
                 publish = { lines ->
-                    _state.update { if (stillCurrent()) it.copy(lyrics = lines) else it }
+                    if (stillCurrent()) {
+                        _state.update { it.copy(lyrics = lines) }
+                        saveCurrentLyrics(songId, lines)
+                    }
                 },
                 report = { attempt, count, error ->
                     lyricsFailureNotice.report(attempt, count)
@@ -2532,6 +2549,14 @@ class PlayerViewModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private fun saveCurrentLyrics(songId: String, lines: List<LyricLine>) {
+        if (lines.isEmpty()) return
+        runCatching {
+            val json = moshi.adapter(SavedLyrics::class.java).toJson(SavedLyrics(songId, lines))
+            prefs.edit { putString("saved_current_lyrics", json) }
+        }.onFailure { webServer.addLog("LYRICS", "save failed ${it.javaClass.simpleName}") }
     }
 
     /** Warm the lyrics cache for an upcoming song so a track change shows them with no blank flash. */

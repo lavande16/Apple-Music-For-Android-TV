@@ -23,6 +23,7 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [28], application = Application::class, qualifiers = "w960dp-h540dp-land-mdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class LoginLayoutTest {
+    @org.junit.Before fun selectChineseForFixtures() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private fun save(name: String) {
         val root = com.applemusicktv.testing.TestArtifacts.root

@@ -91,7 +91,9 @@ fun AppShell(modifier: Modifier = Modifier, onStartupReady: () -> Unit = {}) {
     var navBarHasFocus by remember { mutableStateOf(false) }
     val libraryContentFocus = remember { FocusRequester() }
     fun requestTabFocus(tab: TopNavTab) {
+        val returningToTab = returnState.tabReturnPending
         returnState.cancel()
+        returnState.tabReturnPending = returningToTab
         selectedTab = tab
         pendingTabFocus = tab
         tabFocusRequestId++
@@ -210,12 +212,12 @@ fun AppShell(modifier: Modifier = Modifier, onStartupReady: () -> Unit = {}) {
             // Explicit Back/Up means focus must be visible on a Tab immediately,
             // rather than waiting for a second D-pad event to enter keyboard mode.
             inputModeManager.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard)
-            focusManager.clearFocus(force = true)
             repeat(12) {
                 withFrameNanos { }
-                if (focusedTopTab == target) { pendingTabFocus = null; return@LaunchedEffect }
+                if (focusedTopTab == target) { pendingTabFocus = null; returnState.tabReturnPending = false; return@LaunchedEffect }
                 runCatching { tabFocus.getValue(target).requestFocus() }
             }
+            returnState.tabReturnPending = false
         }
     }
     LaunchedEffect(returnState.pending, returnState.pendingDetailFocus) { if (contentFocusHandoff) pendingTabFocus=null }
@@ -349,7 +351,6 @@ fun AppShell(modifier: Modifier = Modifier, onStartupReady: () -> Unit = {}) {
         }
     }
     val returnFromPlayer: () -> Unit = {
-        focusManager.clearFocus(force = true)
         returnState.back()
     }
     LaunchedEffect(returnState.returnToTab) {

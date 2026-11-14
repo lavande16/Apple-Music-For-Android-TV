@@ -1,5 +1,7 @@
 # Apple Music For Android TV
 
+当前源码版本 / Current source version: **V84 Release (versionCode 112)**.
+
 **将喜欢的旋律带入客厅。**  
 **Bring your favourite music to the big screen.**
 

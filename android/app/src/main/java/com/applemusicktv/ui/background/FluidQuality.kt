@@ -13,6 +13,8 @@ enum class FluidQuality(private val labelId: Int, val maxEdge: Int, val fps: Int
     val label: String get() = tr(labelId)
 
 
+    fun step(direction: Int): FluidQuality = entries[((ordinal + direction) % entries.size + entries.size) % entries.size]
+
     val animated: Boolean get() = fps > 0
 
     companion object {

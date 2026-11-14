@@ -37,6 +37,7 @@ import java.lang.reflect.Proxy
 @Config(sdk=[28], application=Application::class, qualifiers="w960dp-h960dp-land-mdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class V4PlayerVisualTest {
+    @org.junit.Before fun selectChineseForFixtures() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
     private fun image(name:String):Bitmap {
         lateinit var result:Bitmap

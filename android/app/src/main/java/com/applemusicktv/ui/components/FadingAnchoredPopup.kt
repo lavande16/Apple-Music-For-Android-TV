@@ -3,7 +3,7 @@ package com.applemusicktv.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -22,17 +22,20 @@ fun FadingAnchoredPopup(
     visibleState: MutableTransitionState<Boolean>,
     popupPositionProvider: PopupPositionProvider,
     onDismissRequest: () -> Unit,
+    restoreFocusOnDismiss: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     if (visibleState.isIdle && !visibleState.currentState) return
     val openingMode = androidx.compose.ui.platform.LocalInputModeManager.current.inputMode
     val motion = LocalUiMotion.current
     val interactive = LocalMotionInteractive.current && visibleState.targetState
-    com.applemusicktv.ui.navigation.ReturnFocusLayer {
+    com.applemusicktv.ui.navigation.ReturnFocusLayer(restoreFocusOnDismiss) {
     Popup(popupPositionProvider = popupPositionProvider, onDismissRequest = onDismissRequest,
         properties = PopupProperties(focusable = true)) {
         AnimatedVisibility(visibleState = visibleState, modifier = Modifier.motionInput(interactive),
-            enter = fadeIn(tween(if (motion.enabled) motion.enterMs else 0)),
+            // Render the popup at full opacity on its first frame. Some TV window
+            // compositors do not repaint a zero-alpha popup until the next key event.
+            enter = EnterTransition.None,
             exit = fadeOut(tween(if (motion.enabled) motion.exitMs else 0))) {
             CompositionLocalProvider(LocalMotionInteractive provides interactive, LocalMenuOpeningInputMode provides openingMode) { content() }
         }

@@ -37,6 +37,7 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk=[28],application=Application::class,qualifiers="w960dp-h960dp-mdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class FullscreenFooterBrandingTest {
+    @org.junit.Before fun selectChineseForFixtures() { com.applemusicktv.i18n.AppLanguage.select(com.applemusicktv.i18n.LanguageChoice.Chinese) }
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
     private val ready=FontDownloadState(1,1,FontDownloadPhase.Ready)
     private val output:File get()=File(com.applemusicktv.testing.TestArtifacts.root,"artifacts/v3.0-v16-release/preview").apply {mkdirs()}

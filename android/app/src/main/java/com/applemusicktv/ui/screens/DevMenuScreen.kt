@@ -26,6 +26,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.draw.clip
@@ -103,14 +104,7 @@ fun DevMenuScreen(
                 SettingsSection(tr(R.string.msg_186)) { LauncherIconSettings() }
             }
             LanguageSettingsSection()
-            SettingsSection(tx("外观", "Appearance")) {
-                val dark = com.applemusicktv.ui.theme.AppPalette.isDark
-                Stepper(tx("界面模式", "Appearance"), if (dark) tx("深色", "Dark") else tx("浅色", "Light"),
-                    tx("选择应用界面的显示模式", "Choose the app appearance"),
-                    { com.applemusicktv.ui.theme.AppPalette.setDark(ctx, false) },
-                    { com.applemusicktv.ui.theme.AppPalette.setDark(ctx, true) },
-                    decEnabled = dark, incEnabled = !dark)
-            }
+            AppearanceSettingsSection()
             SettingsSection(tr(R.string.playback_section)) {
                 Stepper(tr(R.string.msg_187), tr(R.string.msg_188).format(com.applemusicktv.i18n.AppLanguage.locale, state.crossfadeMs / 1000f),
                     tr(R.string.msg_189), { vm.setCrossfade(com.applemusicktv.data.CrossfadePreferences.step(state.crossfadeMs, -1)) },
@@ -415,13 +409,14 @@ internal fun Stepper(label: String, value: String, sub: String, onDec: () -> Uni
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 internal fun StepBtn(symbol: String, onClick: () -> Unit, enabled: Boolean = true) {
-    Surface(onClick = onClick, enabled = enabled, modifier = Modifier.size(36.dp),
+    Surface(onClick = { if (enabled) onClick() }, modifier = Modifier.size(36.dp)
+        .then(if (enabled) Modifier else Modifier.semantics { disabled() }),
         shape = ClickableSurfaceDefaults.shape(ContentActionShape),
         colors = ClickableSurfaceDefaults.colors(containerColor = com.applemusicktv.ui.theme.AppPalette.adaptive(Color(0xFFE8E8ED), Color(0xFF38383D)), focusedContainerColor = com.applemusicktv.ui.theme.AppPalette.accent,
             focusedContentColor = Color.White, contentColor = com.applemusicktv.ui.theme.AppPalette.adaptive(Color(0xFF3C3C43), Color(0xFFE3E3E8))),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
         glow = ClickableSurfaceDefaults.glow(focusedGlow = Glow.None)) {
-        Box(Modifier.fillMaxSize(), Alignment.Center) { Text(symbol, fontSize = 20.sp) }
+        Box(Modifier.fillMaxSize(), Alignment.Center) { Text(symbol, fontSize = 20.sp, color = if (enabled) androidx.compose.ui.graphics.Color.Unspecified else com.applemusicktv.ui.theme.AppPalette.adaptive(Color(0xFF99999F), Color(0xFF88888F))) }
     }
 }
 
@@ -569,9 +564,23 @@ internal fun LanguageSettingsSection() {
             com.applemusicktv.i18n.LanguageChoice.English -> "English"
         }
         fun changeLanguage(direction: Int) {
-            com.applemusicktv.i18n.AppLanguage.select(choices[(choice.ordinal + direction + choices.size) % choices.size])
+            com.applemusicktv.i18n.AppLanguage.select(choices[(com.applemusicktv.i18n.AppLanguage.choice.ordinal + direction + choices.size) % choices.size])
         }
         Stepper(tr(R.string.msg_313), label, tr(R.string.msg_314),
             { changeLanguage(-1) }, { changeLanguage(1) })
+    }
+}
+
+@Composable
+internal fun AppearanceSettingsSection() {
+    val ctx = LocalContext.current
+    val english = com.applemusicktv.i18n.AppLanguage.code == "en"
+    fun tx(zh: String, en: String) = if (english) en else zh
+    val dark = com.applemusicktv.ui.theme.AppPalette.isDark
+    SettingsSection(tx("外观", "Appearance")) {
+        Stepper(tx("界面模式", "Appearance"), if (dark) tx("深色", "Dark") else tx("浅色", "Light"),
+            tx("选择应用界面的显示模式", "Choose the app appearance"),
+            { com.applemusicktv.ui.theme.AppPalette.setDark(ctx, !com.applemusicktv.ui.theme.AppPalette.isDark) },
+            { com.applemusicktv.ui.theme.AppPalette.setDark(ctx, !com.applemusicktv.ui.theme.AppPalette.isDark) })
     }
 }
