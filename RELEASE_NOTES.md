@@ -1,3 +1,15 @@
+# Release notes / 版本说明
+
+## V84 Release
+
+修复已知问题。
+
+[Download V84 / 下载 V84](https://github.com/lavande16/Apple-Music-For-Android-TV/releases/tag/v84)
+
+---
+
+> Historical upstream notes below describe an earlier v1.2 snapshot; they are not the V84 release notes and may not reflect current behavior.
+
 # Apple Music TV — v1.2
 
 - A big one. Standalone on-device playback is now the default, radio plays, and the whole Now Playing / Browse experience got a facelift.

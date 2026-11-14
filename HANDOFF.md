@@ -1,5 +1,7 @@
 # Handoff — Apple Music TV
 
+> Historical development log: the entries below predate V84 and may describe features or implementation details that have changed. For the current project, start with [README](README.md), [technical details](docs/TECHNICAL.md), and [releases](https://github.com/lavande16/Apple-Music-For-Android-TV/releases).
+
 Last updated: 2026-08-30
 
 ## Session 2026-08-30 — dead-song fallback, Listen Now resilience, scroll perf (v1.2)

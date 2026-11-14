@@ -1,5 +1,7 @@
 # Apple Music TV — Claude Notes
 
+> Historical development reference: this document predates V84. Paths and feature descriptions below may be outdated; verify them against the current source. In particular, video entry points are disabled in the V84 user version.
+
 ## What this is
 Native Android TV / Fire TV Apple Music client.
 - **Android app** — Jetpack Compose for TV, Media3 ExoPlayer, Hilt DI, Retrofit+Moshi

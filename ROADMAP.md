@@ -1,5 +1,7 @@
 # Roadmap
 
+> Historical planning notes from an earlier project snapshot. These ideas are not a current V84 roadmap or a commitment to implement the features described below.
+
 Rough direction, not a promise. Roughly ordered by impact.
 
 ## Planned / exploring

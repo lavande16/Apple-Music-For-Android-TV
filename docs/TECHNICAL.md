@@ -1,5 +1,7 @@
 # Technical details
 
+> V84 note: the architecture and proxy setup sections below are historical reference material and have not all been revalidated against V84. Check the current source before relying on them. The current user build disables on-demand video entry points.
+
 Everything below used to live in the README. It's here so the front page stays about *using* the app; this page is for building and understanding it.
 
 ## Modes
@@ -106,14 +108,14 @@ Requirements: Android Studio / SDK (compileSdk 35), JDK 17, a TV device with ADB
 
 ## CI & releases
 
-The **Android APK** workflow ([`.github/workflows/android.yml`](../.github/workflows/android.yml)) runs on every push/PR to `main` and on manual dispatch. Each run sets up JDK 17 + the SDK, writes a default `local.properties`, runs unit tests, builds the debug APK, and uploads it as the **`app-debug`** artifact. On pushes to `main` it also refreshes the rolling **`dev`** pre-release (deleted + re-created each push so it sorts to the top of the Releases list).
+The [Android checks workflow](../.github/workflows/android.yml) runs unit tests on pushes and pull requests that change `android/**` or the workflow itself; it can also be started manually. It uses JDK 17 and uploads JUnit XML and HTML test reports for seven days. It does not build or publish an APK.
 
-**Getting the APK:** repo **Releases** → latest build → `app-debug.apk` (no login), or a specific run's **Actions → Artifacts → `app-debug`**. Sideload with `adb install -r app-debug.apk`.
+Download the current signed user APK from [GitHub Releases](https://github.com/lavande16/Apple-Music-For-Android-TV/releases/latest). V84 is `3.0-V84`, versionCode `112`; its update notes are “修复已知问题。”.
 
-### Cutting a versioned release (and the in-app updater)
+### Versioning and updates
 
-The app polls `releases/latest` on launch. To ship an update, bump **both** `versionCode` and `versionName` in `android/app/build.gradle.kts`, then tag a GitHub release with a higher number than the running build (e.g. `v1.2`). The updater compares numerically after stripping a leading `v`; equal versions aren't offered. Mark a release **prerelease** to reach only users who enabled **Beta updates** in Settings → Software.
+`android/release-version.properties` contains the source version name and Android versionCode. The app's update client reads the configured website `update.json` manifest; publishing a GitHub release alone does not deploy that manifest or the website. The public V84 APK is a minified, non-debuggable Release build. Its signing key differs from a developer's local debug key, so a locally built APK generally cannot update it in place.
 
 ### Committing / pushing
 
-`main` is the working branch; pushing there triggers the workflow and refreshes the `dev` release. Native Widevine libs live in `android/app/src/main/jniLibs/` and the FFmpeg Media3 decoder in `android/app/libs/` — both are committed (the build needs them). Secrets (`auth-state.json`, `*.keystore`, `local.properties`, `.env`) are git-ignored and must never be committed.
+`main` is the working branch. Native libraries required by the build are included in the repository; see [third-party notices](../THIRD_PARTY_NOTICES.md). Do not commit tokens, `auth-state.json`, `.env`, `local.properties`, or signing keys.

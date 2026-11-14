@@ -1,5 +1,7 @@
 <div align="center">
 
+> Historical upstream README for reference. Its download links, feature descriptions and setup steps refer to the upstream project, not necessarily this V84 fork. See the [current README](../README.md).
+
 ![Apple Music TV](images/banner.svg)
 
 # Apple Music TV

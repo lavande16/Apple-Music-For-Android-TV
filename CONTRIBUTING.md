@@ -18,7 +18,7 @@ Thanks for your interest. This is a personal / educational project, but PRs and 
 | On-device decrypt (standalone) | `.../media/` (Widevine CDM, CENC decryptor, `AppleDirectClient`) |
 | Proxy server routes | `server/src/routes/` |
 
-See [CLAUDE.md](CLAUDE.md) for a dense, up-to-date map of how the pieces fit together and the non-obvious gotchas (it's the most detailed doc in the repo).
+[CLAUDE.md](CLAUDE.md) is a historical reference; verify its details against the current source and [technical notes](docs/TECHNICAL.md).
 
 ## Guidelines
 
@@ -30,4 +30,4 @@ See [CLAUDE.md](CLAUDE.md) for a dense, up-to-date map of how the pieces fit tog
 ## Pull requests
 
 - Branch off `main`, keep the PR focused, and describe what you changed and how you verified it.
-- CI builds the APK on every PR; make sure it's green.
+- Changes under `android/` or `.github/workflows/android.yml` trigger the Android unit-test workflow on pushes and pull requests. CI uploads test reports; it does not build or publish an APK. Make sure the checks pass.
